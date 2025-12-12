@@ -1,0 +1,33 @@
+[project]
+name = "py-chat-response"
+version = "0.1.0"
+description = "A basic chatbot that can generate responses to text using Gemini."
+readme = "README.md"
+license = { file = "LICENSE.txt" }
+authors = [{ name = "Steven Wichers", email = "me@stevenwichers.com" }]
+requires-python = "~3.13"
+dependencies = [
+    "google-genai (>=1.55.0,<2.0.0)",
+    "fastapi (>=0.124.2,<0.125.0)",
+    "uvicorn[standard] (>=0.38.0,<0.39.0)",
+    "python-dotenv (>=1.2.1,<2.0.0)",
+]
+
+[project.urls]
+Homepage = "https://github.com/swichers/py-chat-response"
+Repository = "https://github.com/swichers/py-chat-response"
+
+[tool.poetry]
+package-mode = false
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = ["taskipy (>=1.14.1,<2.0.0)"]
+
+[tool.taskipy.tasks]
+dev = "uvicorn main:app --reload --host 0.0.0.0 --port 8001"
+build = "docker build -t py-chat-response ."
+run = "docker run --gpus all -p 8001:8001 -d --name py-chat-response py-chat-response"
