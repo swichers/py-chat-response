@@ -74,7 +74,7 @@ Checks if the service is running and if CUDA is available.
 
 **Example Request:**
 ```bash
-http :8000/health
+http :8001/health
 ```
 
 **Response**:
