@@ -1,3 +1,6 @@
+.env
+system_context.md
+
 # Ignore the virtual environment folder
 .venv
 venv

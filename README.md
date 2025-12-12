@@ -62,7 +62,7 @@ This project uses `taskipy` to simplify common commands. Run these with `poetry 
   ```bash
   poetry run task run
   ```
-  Runs the container, listening on port 8001.
+  Runs the container, listening on port 8001. This command automatically passes your `.env` file variables to the container. Ensure your `.env` file is properly configured before running.
 
 ## API Usage
 
