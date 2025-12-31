@@ -16,14 +16,6 @@ class GeminiTextService:
     ) -> str:
         prompt = f"{context}\n{text}" if context else text
 
-        sys_instruction = system_context
-        if not sys_instruction:
-            try:
-                with open(Config.SYSTEM_CONTEXT, "r") as f:
-                    sys_instruction = f.read().strip()
-            except FileNotFoundError:
-                sys_instruction = None
-
         def truncate(text, limit=10):
             if not text:
                 return "None"
@@ -33,12 +25,12 @@ class GeminiTextService:
             return " ".join(words[:limit]) + "..."
 
         logger.info(
-            f"Generating response for text: '{truncate(text)}' with system context: '{truncate(sys_instruction)}'"
+            f"Generating response for text: '{truncate(text)}' with system context: '{truncate(system_context)}'"
         )
 
         gen_config = {"response_modalities": ["TEXT"]}
-        if sys_instruction:
-            gen_config["system_instruction"] = sys_instruction
+        if system_context:
+            gen_config["system_instruction"] = system_context
 
         try:
             response = self.client.models.generate_content(

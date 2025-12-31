@@ -1,4 +1,7 @@
-system_context.md
+contexts/**/*
+!contexts/default.md
+
+.idea/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

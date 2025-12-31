@@ -1,5 +1,7 @@
 .env
-system_context.md
+
+.idea/
+.github/
 
 # Ignore the virtual environment folder
 .venv
@@ -9,6 +11,10 @@ ENV
 # Ignore git history (can be huge)
 .git
 .gitignore
+
+# Docker files
+Dockerfile
+docker-compose.yml
 
 # Ignore python cache
 __pycache__
