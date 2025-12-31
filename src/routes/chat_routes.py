@@ -13,6 +13,64 @@ context_manager = ContextManager()
 
 @router.post("", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
+    """
+    Generate an AI chat response using the Gemini language model.
+
+    This endpoint accepts a text prompt along with optional context and system context,
+    then generates a response using the configured Gemini AI model. The system context
+    can be loaded from predefined context files to customize the AI's behavior.
+
+    Args:
+        request (ChatRequest): The chat request containing:
+            - text (str): The main input text or question to generate a response for.
+            - context (str, optional): Additional context to prepend to the text.
+            - system_context (str, optional): Machine name of a context file to use
+              as system instructions. If not provided, uses "default" context if available.
+
+    Returns:
+        ChatResponse: The generated response containing:
+            - output (List[Output]): List of output messages, each containing:
+                - type (str): Message type, always "message"
+                - role (str): Message role, always "assistant"
+                - system_context (str, optional): The system context used
+                - content (Message): The message content with:
+                    - text (str): The generated response text
+
+    Raises:
+        HTTPException:
+            - 404: If the specified system_context file is not found
+            - 500: If there's an error generating the response
+
+    Example:
+        Request:
+            POST /api/v1/chat
+            Content-Type: application/json
+
+            {
+                "text": "What is the capital of France?",
+                "context": "The user is learning about European geography.",
+                "system_context": "helpful_tutor"
+            }
+
+        Response (200 OK):
+            {
+                "output": [
+                    {
+                        "type": "message",
+                        "role": "assistant",
+                        "system_context": "helpful_tutor",
+                        "content": {
+                            "text": "The capital of France is Paris. It's one of the most famous cities in Europe..."
+                        }
+                    }
+                ]
+            }
+
+        Error Response (404 Not Found):
+            {
+                "detail": "Context 'helpful_tutor' not found"
+            }
+    """
     try:
         system_context = None
 
