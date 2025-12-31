@@ -3,8 +3,18 @@ name: Python Linting and Validation
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - '**.py'
+      - 'poetry.lock'
+      - 'pyproject.toml'
+      - 'src/**'
   pull_request_target:
     branches: [ "main" ]
+    paths:
+      - '**.py'
+      - 'poetry.lock'
+      - 'pyproject.toml'
+      - 'src/**'
 
 permissions:
   contents: read
