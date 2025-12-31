@@ -30,7 +30,10 @@ RUN groupadd -g 1001 appgroup && \
 WORKDIR /app
 
 COPY --from=build --chown=appuser:appgroup /opt/pysetup/.venv /opt/pysetup/.venv
-COPY --chown=appuser:appgroup . .
+COPY --chown=appuser:appgroup main.py main.py
+COPY --chown=appuser:appgroup src src
+COPY --chown=appuser:appgroup contexts/default.md contexts/default.md
+RUN chmod 444 contexts/default.md
 
 USER appuser
 

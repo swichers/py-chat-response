@@ -1,5 +1,7 @@
 .env
-system_context.md
+
+.idea/
+.github/
 
 # Ignore the virtual environment folder
 .venv
