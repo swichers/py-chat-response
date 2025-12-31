@@ -12,6 +12,10 @@ ENV
 .git
 .gitignore
 
+# Docker files
+Dockerfile
+docker-compose.yml
+
 # Ignore python cache
 __pycache__
 *.pyc

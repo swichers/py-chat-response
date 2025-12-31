@@ -58,6 +58,16 @@ This project uses `taskipy` to simplify common commands. Run these with `poetry 
   ```
   Runs the container, listening on port 8001. This command automatically passes your `.env` file variables to the container. Ensure your `.env` file is properly configured before running.
 
+### Docker Compose
+
+For easier deployment and development, you can use Docker Compose to manage the application:
+
+- **Start the service**:
+  ```bash
+  docker compose up -d
+  ```
+  Builds (if needed) and starts the service in detached mode. The `contexts/` folder is mounted as a volume, allowing you to dynamically manage context files without rebuilding the container.
+
 ## API Usage
 
 ### Check Service Health
