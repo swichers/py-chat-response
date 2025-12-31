@@ -15,6 +15,7 @@ class Message(BaseModel):
 class Output(BaseModel):
     type: str
     role: str
+    system_context: Optional[str] = None
     content: Message
 
 
