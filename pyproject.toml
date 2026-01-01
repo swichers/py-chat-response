@@ -3,7 +3,6 @@ name = "py-chat-response"
 version = "0.1.0"
 description = "A basic chatbot that can generate responses to text using Gemini."
 readme = "README.md"
-license = { file = "LICENSE.txt" }
 authors = [{ name = "Steven Wichers", email = "me@stevenwichers.com" }]
 requires-python = "~3.13"
 dependencies = [
