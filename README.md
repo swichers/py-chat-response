@@ -105,14 +105,16 @@ http :8001/api/v1/chat \
 
 ## Documentation
 
-All API endpoints, functions, and classes are comprehensively documented in the code with:
-- Detailed parameter descriptions
-- Return value specifications
-- Request/response examples
-- Error handling documentation
+The API documentation is available in OpenAPI format. To generate the latest `openapi.json` specification:
 
-For detailed API documentation, see:
-- FastAPI auto-generated docs: `http://localhost:8001/docs` (when running)
+```bash
+poetry run task generate-docs
+```
+
+The generated file will be located at `docs/openapi/openapi.json`.
+
+Documentation is automatically deployed to GitHub Pages on every push to `main` (or manually triggered).
+HTML documentation: `https://swichers.github.io/py-chat-response/openapi/`
 - Inline docstrings in the source code
 
 ## Environment Variables

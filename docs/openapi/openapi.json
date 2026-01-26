@@ -1,0 +1,412 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FastAPI",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/contexts": {
+      "get": {
+        "tags": [
+          "contexts"
+        ],
+        "summary": "List Contexts",
+        "description": "List all available context files.\n\nThis endpoint retrieves all context files stored in the contexts directory.\nEach context file contains system instructions that can be used to customize\nthe AI's behavior in chat responses.\n\nReturns:\n    ListContextsResponse: Response containing:\n        - contexts (List[ContextInfo]): List of context information, each containing:\n            - machine_name (str): The normalized machine name of the context\n            - file_path (str): The absolute path to the context file\n\nRaises:\n    HTTPException: 500 error if there's an issue reading the contexts directory\n\nExample:\n    Request:\n        GET /api/v1/contexts\n\n    Response (200 OK):\n        {\n            \"contexts\": [\n                {\n                    \"machine_name\": \"default\",\n                    \"file_path\": \"/app/contexts/default.md\"\n                },\n                {\n                    \"machine_name\": \"helpful_tutor\",\n                    \"file_path\": \"/app/contexts/helpful_tutor.md\"\n                }\n            ]\n        }",
+        "operationId": "list_contexts_api_v1_contexts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListContextsResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "contexts"
+        ],
+        "summary": "Create Context",
+        "description": "Create a new context file.\n\nThis endpoint creates a new system context file that can be used to customize\nthe AI's behavior. The context name is automatically normalized to a machine-friendly\nformat (lowercase with underscores), and the content is saved as a Markdown file\nin the contexts directory.\n\nArgs:\n    request (CreateContextRequest): The context creation request containing:\n        - name (str): The display name for the context. Will be normalized to\n          lowercase with underscores replacing non-alphanumeric characters.\n        - content (str): The context content/instructions to store. This defines\n          the AI's behavior when this context is used.\n\nReturns:\n    CreateContextResponse: Response containing:\n        - machine_name (str): The normalized machine name of the created context\n        - message (str): Success message confirming creation\n\nRaises:\n    HTTPException:\n        - 400: If name or content is empty, or name contains no alphanumeric characters\n        - 500: If there's an error writing the context file\n\nExample:\n    Request:\n        POST /api/v1/contexts\n        Content-Type: application/json\n\n        {\n            \"name\": \"Helpful Tutor\",\n            \"content\": \"You are a patient and encouraging tutor who explains concepts clearly.\"\n        }\n\n    Response (200 OK):\n        {\n            \"machine_name\": \"helpful_tutor\",\n            \"message\": \"Context 'helpful_tutor' created successfully\"\n        }\n\n    Error Response (400 Bad Request):\n        {\n            \"detail\": \"Context name cannot be empty\"\n        }",
+        "operationId": "create_context_api_v1_contexts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContextRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateContextResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contexts/{machine_name}": {
+      "delete": {
+        "tags": [
+          "contexts"
+        ],
+        "summary": "Delete Context",
+        "description": "Delete a context file by its machine name.\n\nThis endpoint permanently removes a context file from the contexts directory.\nThe machine name must match exactly (lowercase with underscores).\n\nArgs:\n    machine_name (str): The normalized machine name of the context to delete.\n        This should be the exact machine_name returned when the context was created\n        or listed (e.g., \"helpful_tutor\", not \"Helpful Tutor\").\n\nReturns:\n    DeleteContextResponse: Response containing:\n        - message (str): Success message confirming deletion\n\nRaises:\n    HTTPException:\n        - 404: If the context file with the specified machine_name doesn't exist\n        - 500: If there's an error deleting the context file\n\nExample:\n    Request:\n        DELETE /api/v1/contexts/helpful_tutor\n\n    Response (200 OK):\n        {\n            \"message\": \"Context 'helpful_tutor' deleted successfully\"\n        }\n\n    Error Response (404 Not Found):\n        {\n            \"detail\": \"Context 'helpful_tutor' not found\"\n        }",
+        "operationId": "delete_context_api_v1_contexts__machine_name__delete",
+        "parameters": [
+          {
+            "name": "machine_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Machine Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteContextResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat": {
+      "post": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Chat Endpoint",
+        "description": "Generate an AI chat response using the Gemini language model.\n\nThis endpoint accepts a text prompt along with optional context and system context,\nthen generates a response using the configured Gemini AI model. The system context\ncan be loaded from predefined context files to customize the AI's behavior.\n\nArgs:\n    request (ChatRequest): The chat request containing:\n        - text (str): The main input text or question to generate a response for.\n        - context (str, optional): Additional context to prepend to the text.\n        - system_context (str, optional): Machine name of a context file to use\n          as system instructions. If not provided, uses \"default\" context if available.\n\nReturns:\n    ChatResponse: The generated response containing:\n        - output (List[Output]): List of output messages, each containing:\n            - type (str): Message type, always \"message\"\n            - role (str): Message role, always \"assistant\"\n            - system_context (str, optional): The system context used\n            - content (Message): The message content with:\n                - text (str): The generated response text\n\nRaises:\n    HTTPException:\n        - 404: If the specified system_context file is not found\n        - 500: If there's an error generating the response\n\nExample:\n    Request:\n        POST /api/v1/chat\n        Content-Type: application/json\n\n        {\n            \"text\": \"What is the capital of France?\",\n            \"context\": \"The user is learning about European geography.\",\n            \"system_context\": \"helpful_tutor\"\n        }\n\n    Response (200 OK):\n        {\n            \"output\": [\n                {\n                    \"type\": \"message\",\n                    \"role\": \"assistant\",\n                    \"system_context\": \"helpful_tutor\",\n                    \"content\": {\n                        \"text\": \"The capital of France is Paris. It's one of the most famous cities in Europe...\"\n                    }\n                }\n            ]\n        }\n\n    Error Response (404 Not Found):\n        {\n            \"detail\": \"Context 'helpful_tutor' not found\"\n        }",
+        "operationId": "chat_endpoint_api_v1_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Health check endpoint for the API.\n\nThis endpoint is used to verify that the API service is running and responsive.\nIt returns a simple status message indicating the service is operational.\n\nReturns:\n    dict: A dictionary containing the health status.\n        - status (str): Always returns \"ok\" when the service is running.\n\nExample:\n    Request:\n        GET /health\n\n    Response (200 OK):\n        {\n            \"status\": \"ok\"\n        }",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ChatRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "context": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context"
+          },
+          "system_context": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "ChatRequest",
+        "description": "Request model for the chat endpoint.\n\nThis model defines the structure of incoming chat requests to the API.\nIt contains the user's input text along with optional context information.\n\nAttributes:\n    text (str): The main input text or question from the user.\n        This is the primary prompt that will be sent to the AI model.\n\n    context (str, optional): Additional contextual information to prepend to the text.\n        This helps provide background information for more relevant responses.\n        Defaults to None.\n\n    system_context (str, optional): The machine name of a context file to use\n        as system instructions. This customizes the AI's behavior and personality.\n        If not provided, the \"default\" context will be used if available.\n        Defaults to None.\n\nExample:\n    {\n        \"text\": \"What is the capital of France?\",\n        \"context\": \"The user is learning about European geography.\",\n        \"system_context\": \"helpful_tutor\"\n    }"
+      },
+      "ChatResponse": {
+        "properties": {
+          "output": {
+            "items": {
+              "$ref": "#/components/schemas/Output"
+            },
+            "type": "array",
+            "title": "Output"
+          }
+        },
+        "type": "object",
+        "required": [
+          "output"
+        ],
+        "title": "ChatResponse",
+        "description": "Response model for the chat endpoint.\n\nThis model defines the structure of the response returned by the chat API.\nIt contains a list of output messages generated by the AI.\n\nAttributes:\n    output (List[Output]): A list of output messages. Currently always contains\n        a single message with the AI's response, but structured as a list to\n        support potential future multi-message responses.\n\nExample:\n    {\n        \"output\": [\n            {\n                \"type\": \"message\",\n                \"role\": \"assistant\",\n                \"system_context\": \"helpful_tutor\",\n                \"content\": {\n                    \"text\": \"The capital of France is Paris.\"\n                }\n            }\n        ]\n    }"
+      },
+      "ContextInfo": {
+        "properties": {
+          "machine_name": {
+            "type": "string",
+            "title": "Machine Name"
+          },
+          "file_path": {
+            "type": "string",
+            "title": "File Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "machine_name",
+          "file_path"
+        ],
+        "title": "ContextInfo",
+        "description": "Information model for a single context.\n\nThis model represents metadata about a context file, used when listing\navailable contexts.\n\nAttributes:\n    machine_name (str): The normalized machine name of the context.\n        This is used to reference the context in API calls.\n\n    file_path (str): The absolute file system path to the context file.\n\nExample:\n    {\n        \"machine_name\": \"helpful_tutor\",\n        \"file_path\": \"/app/contexts/helpful_tutor.md\"\n    }"
+      },
+      "CreateContextRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "content"
+        ],
+        "title": "CreateContextRequest",
+        "description": "Request model for creating a new context.\n\nThis model defines the structure for creating a new system context file.\nThe context name will be normalized to a machine-friendly format.\n\nAttributes:\n    name (str): The display name for the context. This will be normalized to\n        lowercase with underscores replacing non-alphanumeric characters.\n        Must contain at least one alphanumeric character.\n\n    content (str): The context content/instructions to store. This defines\n        the AI's behavior when this context is used. Cannot be empty.\n\nExample:\n    {\n        \"name\": \"Helpful Tutor\",\n        \"content\": \"You are a patient and encouraging tutor who explains concepts clearly.\"\n    }"
+      },
+      "CreateContextResponse": {
+        "properties": {
+          "machine_name": {
+            "type": "string",
+            "title": "Machine Name"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "machine_name",
+          "message"
+        ],
+        "title": "CreateContextResponse",
+        "description": "Response model for context creation.\n\nThis model defines the structure of the response returned after successfully\ncreating a new context file.\n\nAttributes:\n    machine_name (str): The normalized machine name of the created context.\n        This is the name used to reference the context in API calls.\n\n    message (str): A success message confirming the context was created.\n\nExample:\n    {\n        \"machine_name\": \"helpful_tutor\",\n        \"message\": \"Context 'helpful_tutor' created successfully\"\n    }"
+      },
+      "DeleteContextResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "DeleteContextResponse",
+        "description": "Response model for context deletion.\n\nThis model defines the structure of the response returned after successfully\ndeleting a context file.\n\nAttributes:\n    message (str): A success message confirming the context was deleted.\n\nExample:\n    {\n        \"message\": \"Context 'helpful_tutor' deleted successfully\"\n    }"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ListContextsResponse": {
+        "properties": {
+          "contexts": {
+            "items": {
+              "$ref": "#/components/schemas/ContextInfo"
+            },
+            "type": "array",
+            "title": "Contexts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "contexts"
+        ],
+        "title": "ListContextsResponse",
+        "description": "Response model for listing contexts.\n\nThis model defines the structure of the response returned when listing\nall available context files.\n\nAttributes:\n    contexts (List[ContextInfo]): A list of context information objects,\n        each containing the machine name and file path of a context.\n\nExample:\n    {\n        \"contexts\": [\n            {\n                \"machine_name\": \"default\",\n                \"file_path\": \"/app/contexts/default.md\"\n            },\n            {\n                \"machine_name\": \"helpful_tutor\",\n                \"file_path\": \"/app/contexts/helpful_tutor.md\"\n            }\n        ]\n    }"
+      },
+      "Message": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "Message",
+        "description": "Message content model.\n\nThis model represents the actual text content of a message in the chat response.\n\nAttributes:\n    text (str): The text content of the message. This is the generated response\n        from the AI model or any other message content.\n\nExample:\n    {\n        \"text\": \"The capital of France is Paris.\"\n    }"
+      },
+      "Output": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "system_context": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Context"
+          },
+          "content": {
+            "$ref": "#/components/schemas/Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "role",
+          "content"
+        ],
+        "title": "Output",
+        "description": "Output message model for chat responses.\n\nThis model represents a single output message in the chat response.\nIt includes metadata about the message type, role, and the actual content.\n\nAttributes:\n    type (str): The type of output. Currently always \"message\" for text responses.\n\n    role (str): The role of the message sender. Currently always \"assistant\"\n        for AI-generated responses.\n\n    system_context (str, optional): The machine name of the system context\n        that was used to generate this response. Defaults to None.\n\n    content (Message): The actual message content containing the response text.\n\nExample:\n    {\n        \"type\": \"message\",\n        \"role\": \"assistant\",\n        \"system_context\": \"helpful_tutor\",\n        \"content\": {\n            \"text\": \"The capital of France is Paris.\"\n        }\n    }"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
