@@ -29,7 +29,11 @@ class GeminiTextService:
             Exception: If the API key is not set or client initialization fails.
         """
         self.api_key = Config.LLM_API_KEY
-        self.client = genai.Client(api_key=self.api_key)
+        if not self.api_key:
+            logger.warning("LLM_API_KEY not found. GeminiTextService calls will fail.")
+            self.client = None
+        else:
+            self.client = genai.Client(api_key=self.api_key)
         self.model_name = Config.LLM_MODEL
 
     def generate_response(
@@ -99,6 +103,11 @@ class GeminiTextService:
             gen_config["system_instruction"] = system_context
 
         try:
+            if not self.client:
+                raise ValueError(
+                    "Gemini API client is not initialized. Please set LLM_API_KEY."
+                )
+
             response = self.client.models.generate_content(
                 model=self.model_name, contents=prompt, config=gen_config
             )
