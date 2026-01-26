@@ -114,7 +114,7 @@ poetry run task generate-docs
 The generated file will be located at `docs/openapi/openapi.json`.
 
 Documentation is automatically deployed to GitHub Pages on every push to `main` (or manually triggered).
-HTML documentation: `https://swichers.github.io/py-chat-response/openapi/`
+HTML documentation: `https://swichers.github.io/py-chat-response/`
 - Inline docstrings in the source code
 
 ## Environment Variables
